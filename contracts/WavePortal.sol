@@ -6,7 +6,6 @@ import "hardhat/console.sol";
 
 contract WavePortal {
     uint256 totalWaves;
-
     uint256 private seed;
 
     event NewWave(address indexed from, uint256 timestamp, string message);
@@ -18,20 +17,19 @@ contract WavePortal {
     }
 
     Wave[] waves;
+
     mapping(address => uint256) public lastWavedAt;
 
     constructor() payable {
         console.log("We have been constructed!");
-
-        seed = (block.timestamp + block.difficulty) % 100;
     }
 
     function wave(string memory _message) public {
-        // require user to wait 30s before waving again
         require(
             lastWavedAt[msg.sender] + 30 seconds < block.timestamp,
             "Wait 30s"
         );
+
         lastWavedAt[msg.sender] = block.timestamp;
 
         totalWaves += 1;
@@ -39,15 +37,19 @@ contract WavePortal {
 
         waves.push(Wave(msg.sender, _message, block.timestamp));
 
-        seed = (block.difficulty + block.timestamp + seed) % 100;
+        uint256 randomNumber = (block.difficulty + block.timestamp + seed) %
+            100;
+        console.log("Random # generated: %s", randomNumber);
 
-        if (seed <= 50) {
+        seed = randomNumber;
+
+        if (randomNumber < 50) {
             console.log("%s won!", msg.sender);
 
             uint256 prizeAmount = 0.0001 ether;
             require(
                 prizeAmount <= address(this).balance,
-                "Trying to withdraw more money than the contract has."
+                "Trying to withdraw more money than they contract has."
             );
             (bool success, ) = (msg.sender).call{value: prizeAmount}("");
             require(success, "Failed to withdraw money from contract.");
